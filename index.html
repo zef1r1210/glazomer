@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Глазомер — Measuring Imagery</title>
+<meta name="description" content="Тест образного мышления по методу П. С. Панкова: представьте ответ, не считая.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!--
+  Глазомер (measuring imagery) по методу П. С. Панкова.
+  Источник: P. S. Pankov, "Independent Learning for Open Society", Soros-Kyrgyzstan, 1996, раздел 2.
+  Схема задачи: 1) данные по random  2) точный ответ X0  3) текст задачи
+               4) таймер с укорачивающейся полоской и запрос ответа X  5) показ |X − X0|
+  Оценка (п. 2.2): Elog = |ln(X/X0)|; < 10% отлично, < 20% хорошо, < 40% удовлетворительно.
+-->
+<style>
+  :root {
+    --bg: #000;
+    --text: #e9f3ff;
+    --muted: #7d8ea3;
+    --neon: #38bdf8;
+    --neon-glow: 0 0 6px rgba(56,189,248,.9), 0 0 22px rgba(56,189,248,.45);
+    --line: rgba(56,189,248,.18);
+    --amber: #fbbf24;
+    --red: #f87171;
+    --font: "Onest", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html { background: var(--bg); }
+  body { font-family: var(--font); color: var(--text); background: var(--bg); font-size: 17px; line-height: 1.55; min-height: 100vh;
+    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56,189,248,.10), transparent 70%); background-repeat: no-repeat; }
+  ::selection { background: var(--neon); color: #000; }
+  :focus-visible { outline: 1.5px solid var(--neon); outline-offset: 3px; box-shadow: var(--neon-glow); }
+  a { color: var(--neon); }
+  .wrap { width: min(760px, 100% - 40px); margin: 0 auto; padding: 28px 0 80px; animation: appear .9s ease-out both; }
+  @keyframes appear { from { opacity: 0; transform: translateY(8px); } }
+
+  /* Шапка */
+  .top { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+  .logo { font-weight: 600; font-size: 15px; letter-spacing: .32em; }
+  .logo span { color: var(--neon); text-shadow: var(--neon-glow); }
+  .link-btn { background: none; border: 0; color: var(--muted); font: 400 15px var(--font); cursor: pointer; padding: 4px 0; }
+  .link-btn:hover { color: var(--text); }
+
+  .hero { padding: 72px 0 40px; border-bottom: 1px solid var(--line); }
+  .hero h1 { font-weight: 300; font-size: clamp(44px, 9vw, 88px); line-height: 1; letter-spacing: -0.035em; }
+  .hero p { color: var(--muted); max-width: 46ch; margin-top: 20px; font-size: 18px; }
+
+  /* Как это работает */
+  .about { border-bottom: 1px solid var(--line); padding: 28px 0; }
+  .about h2 { font-weight: 400; font-size: 24px; margin-bottom: 14px; }
+  .about p { color: var(--muted); max-width: 62ch; margin-bottom: 14px; }
+  .about ol { list-style: none; counter-reset: s; margin: 8px 0 18px; }
+  .about li { counter-increment: s; display: grid; grid-template-columns: 32px 1fr; padding: 8px 0; border-top: 1px solid var(--line); }
+  .about li::before { content: counter(s); color: var(--neon); text-shadow: var(--neon-glow); }
+  .scale { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 6px 0 16px; }
+  .scale div { background: #000; padding: 10px 12px; font-size: 14px; color: var(--muted); }
+  .scale b { display: block; font-weight: 500; font-size: 16px; color: var(--text); }
+
+  /* Панель */
+  .bar-row { display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: end; padding: 28px 0; }
+  .bar-row label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+  select { appearance: none; background: transparent; color: var(--text); font: 400 16px var(--font);
+    border: 0; border-bottom: 1px solid var(--line); padding: 6px 22px 6px 0; cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 9px) 55%, calc(100% - 4px) 55%; background-size: 5px 5px; background-repeat: no-repeat; }
+  select option { background: #05090f; }
+  .btn { margin-left: auto; background: transparent; color: var(--neon); border: 1px solid var(--neon);
+    font: 500 16px var(--font); padding: 12px 30px; border-radius: 999px; cursor: pointer; box-shadow: 0 0 14px rgba(56,189,248,.25), inset 0 0 14px rgba(56,189,248,.08);
+    transition: box-shadow .2s, background .2s; }
+  .btn:hover { background: rgba(56,189,248,.08); box-shadow: var(--neon-glow); }
+  .btn:disabled { opacity: .3; cursor: default; box-shadow: none; }
+
+  /* Задача */
+  .stage { border-top: 1px solid var(--line); padding: 36px 0 8px; min-height: 160px; }
+  .kind { font-size: 13px; color: var(--neon); letter-spacing: .04em; margin-bottom: 14px; }
+  .task { font-weight: 300; font-size: clamp(22px, 3.6vw, 30px); line-height: 1.35; letter-spacing: -0.01em; max-width: 30ch; }
+  .task b { font-weight: 500; color: #fff; }
+  .numbers { font-weight: 400; font-size: 15px; color: var(--text); line-height: 2; word-spacing: 8px; margin-top: 16px; max-width: none; font-variant-numeric: tabular-nums; }
+  .empty { color: var(--muted); font-weight: 300; font-size: 22px; }
+  canvas { display: block; width: 100%; margin-top: 24px; border: 1px solid var(--line); touch-action: manipulation; }
+  canvas.clickable { cursor: crosshair; }
+
+  /* Таймер */
+  .timer { position: relative; height: 2px; background: var(--line); margin-top: 32px; }
+  .timer i { position: absolute; inset: 0 auto 0 0; width: 100%; background: var(--neon); box-shadow: var(--neon-glow); transform-origin: left; }
+  .timer.low i { background: var(--red); box-shadow: 0 0 6px rgba(248,113,113,.9), 0 0 22px rgba(248,113,113,.4); }
+  .tl { font-size: 13px; color: var(--muted); margin-top: 10px; font-variant-numeric: tabular-nums; }
+
+  .answer { display: flex; align-items: center; gap: 12px; margin-top: 22px; border-bottom: 1px solid var(--muted); }
+  .answer:focus-within { border-color: var(--neon); box-shadow: 0 1px 0 var(--neon), 0 8px 18px -14px var(--neon); }
+  .answer input { flex: 1; min-width: 0; background: transparent; border: 0; color: #fff; font: 300 30px var(--font); padding: 8px 0; outline: none; }
+  .answer input::placeholder { color: #3a4656; }
+  .send { background: none; border: 0; color: var(--neon); font: 500 16px var(--font); cursor: pointer; padding: 8px 0 8px 12px; }
+  .send:disabled { color: var(--muted); cursor: default; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+  /* Результат */
+  .result { border-top: 1px solid var(--line); margin-top: 36px; padding-top: 30px; }
+  .grade { font-weight: 300; font-size: clamp(36px, 7vw, 56px); letter-spacing: -0.03em; line-height: 1.05; }
+  .grade.excellent { color: var(--neon); text-shadow: var(--neon-glow); }
+  .grade.good { color: #fff; }
+  .grade.sat { color: var(--amber); }
+  .grade.bad { color: var(--red); }
+  .congrats { color: var(--neon); margin-top: 8px; }
+  .nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 26px 0; }
+  .nums div { background: #000; padding: 14px; }
+  .nums span { display: block; font-size: 12px; color: var(--muted); }
+  .nums strong { font-weight: 400; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .explain-h { font-size: 13px; color: var(--neon); margin-bottom: 6px; }
+  .explain { color: var(--text); max-width: 62ch; font-weight: 300; }
+  .next-row { margin-top: 26px; display: flex; }
+  .next-row .btn { margin-left: 0; }
+
+  /* История */
+  .history { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 28px; }
+  .h-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .history h2 { font-weight: 400; font-size: 24px; }
+  .summary { color: var(--muted); font-size: 15px; margin-bottom: 16px; }
+  .rows { list-style: none; }
+  .rows li { display: grid; grid-template-columns: 1fr auto auto 28px; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .rows .nm { font-size: 15px; }
+  .rows .nm small { display: block; color: var(--muted); font-size: 13px; }
+  .rows .er { color: var(--muted); font-size: 14px; text-align: right; }
+  .rows .gr { font-size: 14px; min-width: 96px; text-align: right; }
+  .gr.excellent { color: var(--neon); } .gr.sat { color: var(--amber); } .gr.bad { color: var(--red); }
+  .del { background: none; border: 0; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; width: 28px; height: 28px; border-radius: 50%; }
+  .del:hover { color: var(--red); background: rgba(248,113,113,.1); }
+
+  footer { margin-top: 64px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 20px; }
+
+  @media (max-width: 560px) {
+    .nums, .scale { grid-template-columns: repeat(2, 1fr); }
+    .btn { margin-left: 0; }
+    .rows li { grid-template-columns: 1fr auto 28px; }
+    .rows .er { display: none; }
+    .hero { padding-top: 48px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">ГЛАЗОМЕР<span>.</span></div>
+    <button class="link-btn" id="aboutBtn" aria-expanded="false" aria-controls="about">Как это работает</button>
+  </div>
+
+  <section class="hero">
+    <h1>Представьте ответ.<br>Не считайте.</h1>
+    <p>Условие точное, а ответ — на глаз. Времени хватит, чтобы понять задачу, но не чтобы решить её по формуле. Так измеряется сила воображения.</p>
+  </section>
+
+  <section class="about" id="about" hidden>
+    <h2>Как это работает</h2>
+    <p>Метод «интеллектуального глазомера» предложил математик Павел Панков. Идея: многое полезное знание есть у нас в голове «заранее», в приближённой форме. Если не дать человеку времени на вычисления, ему придётся представить ответ — и разница с точным ответом покажет, насколько сильно у него работает этот вид воображения.</p>
+    <ol>
+      <li>Компьютер случайно выбирает данные задачи.</li>
+      <li>Вычисляет точный ответ X₀.</li>
+      <li>Показывает условие.</li>
+      <li>Запускает таймер — светящаяся линия укорачивается. Нужно успеть ввести ответ X.</li>
+      <li>Показывает ошибку |X − X₀| и оценку.</li>
+    </ol>
+    <p>Относительная ошибка считается как |ln(X / X₀)| — почти то же, что обычный процент, но работает и для очень больших и очень маленьких ответов.</p>
+    <div class="scale">
+      <div><b>Отлично</b>ошибка меньше 10%</div>
+      <div><b>Хорошо</b>10–20%</div>
+      <div><b>Удовлетворительно</b>20–40%</div>
+      <div><b>Плохо</b>больше 40% или ответ невозможен</div>
+    </div>
+    <p>«Невозможный» ответ — тот, что противоречит смыслу задачи: например, среднее больше самого большого числа или сопротивление параллельной цепи больше одного из резисторов.</p>
+  </section>
+
+  <div class="bar-row">
+    <label>Задачи
+      <select id="kindSel"><option value="all">Все вперемешку</option></select>
+    </label>
+    <label>Время
+      <select id="timeSel">
+        <option value="15">15 с</option>
+        <option value="20" selected>20 с</option>
+        <option value="30">30 с</option>
+      </select>
+    </label>
+    <button class="btn" id="startBtn">Начать</button>
+  </div>
+
+  <section class="stage" aria-live="polite">
+    <div class="kind" id="kind" hidden></div>
+    <div class="task" id="task"><span class="empty">Выберите задачи и нажмите «Начать».</span></div>
+    <canvas id="cv" width="680" height="260" hidden></canvas>
+
+    <div id="answerZone" hidden>
+      <div class="timer" id="timer"><i id="bar"></i></div>
+      <div class="tl" id="tl"></div>
+      <div class="answer" id="answerRow">
+        <input type="text" id="ans" inputmode="decimal" autocomplete="off" placeholder="0,5" aria-label="Ваш ответ">
+        <button class="send" id="sendBtn">Ответить →</button>
+      </div>
+      <div class="hint" id="hint"></div>
+      <button class="btn" id="clickSend" style="margin-top:18px;margin-left:0" hidden>Ответить</button>
+    </div>
+  </section>
+
+  <section class="result" id="result" hidden>
+    <div class="grade" id="grade"></div>
+    <div class="congrats" id="congrats"></div>
+    <div class="nums">
+      <div><span>Точный ответ X₀</span><strong id="rX0"></strong></div>
+      <div><span>Ваш ответ X</span><strong id="rX"></strong></div>
+      <div><span>|X − X₀|</span><strong id="rAbs"></strong></div>
+      <div><span>Ошибка</span><strong id="rRel"></strong></div>
+    </div>
+    <div class="explain-h">Как решить точно</div>
+    <div class="explain" id="explain"></div>
+    <div class="next-row"><button class="btn" id="nextBtn">Следующая задача</button></div>
+  </section>
+
+  <section class="history">
+    <div class="h-head">
+      <h2>История</h2>
+      <button class="link-btn" id="clearBtn" hidden>Очистить всё</button>
+    </div>
+    <div class="summary" id="summary">Пока нет ответов.</div>
+    <ul class="rows" id="rows"></ul>
+  </section>
+
+  <footer>Метод и задачи: П. С. Панков, «Independent Learning for Open Society», Фонд «Сорос-Кыргызстан», 1996. Программа: Изабелла Жусупова.</footer>
+</div>
+
+<script>
+/* ---------- утилиты ---------- */
+const $ = id => document.getElementById(id);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const rint = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const fmt = (x, d = 3) => Number.isFinite(x) ? (+x.toFixed(d)).toLocaleString("ru-RU") : "—";
+
+function parseAnswer(s) {
+  s = s.trim().replace(",", ".").replace(/\s+/g, "");
+  if (!s) return NaN;
+  const m = s.match(/^(-?\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/);
+  if (m) return parseFloat(m[1]) / parseFloat(m[2]);
+  return /^-?\d*\.?\d+$/.test(s) ? parseFloat(s) : NaN;
+}
+function gradeOf(err) {
+  if (err < 0.10) return ["excellent", "Отлично"];
+  if (err < 0.20) return ["good", "Хорошо"];
+  if (err < 0.40) return ["sat", "Удовлетворительно"];
+  return ["bad", "Плохо"];
+}
+
+/* ---------- canvas: неон на чёрном ---------- */
+const cv = $("cv"), ctx = cv.getContext("2d");
+const NEON = "#38bdf8", WHITE = "#e9f3ff", RED = "#f87171", MUTED = "#7d8ea3";
+let canvasH = 260;
+function setupCanvas(h) {
+  canvasH = h;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = 680 * dpr; cv.height = h * dpr;
+  cv.style.aspectRatio = `680 / ${h}`;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 680, h);
+  cv.hidden = false;
+}
+function glow(color, blur = 12) { ctx.shadowColor = color; ctx.shadowBlur = blur; }
+function noGlow() { ctx.shadowBlur = 0; }
+
+/* ---------- задачи (из статьи Панкова) ---------- */
+const TASKS = {
+  ratio: {
+    name: "Вписанные фигуры",
+    gen() {
+      const s3 = Math.sqrt(3);
+      const v = pick([
+        { q: "Какую часть объёма куба занимает вписанный в него <b>шар</b>?", X0: Math.PI / 6, ex: "Диаметр шара равен ребру куба a, значит r = a/2. V шара = (4/3)πr³ = πa³/6, V куба = a³. Отношение π/6 ≈ 0,524. Инженеры обычно отвечают «половина», школьники — от 2/3 до 9/10.", noun: "отношение объёмов шара и куба" },
+        { q: "Какую часть площади квадрата занимает вписанный в него <b>круг</b>?", X0: Math.PI / 4, ex: "Сторона квадрата 2r. Площадь круга πr², квадрата 4r². Отношение π/4 ≈ 0,785.", noun: "отношение площадей круга и квадрата" },
+        { q: "Какую часть объёма куба занимает вписанный в него <b>цилиндр</b>?", X0: Math.PI / 4, ex: "Цилиндр радиуса r и высоты 2r: V = πr²·2r. Куб: (2r)³ = 8r³. Отношение π/4 — то же, что круг в квадрате, потому что сечение по высоте одинаковое.", noun: "отношение объёмов цилиндра и куба" },
+        { q: "Какую часть объёма цилиндра занимает конус с тем же основанием и высотой?", X0: 1 / 3, ex: "Объём конуса — треть произведения площади основания на высоту: V = ⅓·S·h. У цилиндра V = S·h. Отношение 1/3.", noun: "отношение объёмов конуса и цилиндра" },
+        { q: "Какую часть объёма цилиндра занимает вписанный в него <b>шар</b>?", X0: 2 / 3, ex: "Высота цилиндра 2r. V шара = (4/3)πr³, V цилиндра = 2πr³. Отношение 2/3 — Архимед так гордился этим открытием, что попросил выбить шар в цилиндре на своей могиле.", noun: "отношение Архимеда" },
+        { q: "Какую часть площади круга занимает вписанный в него <b>квадрат</b>?", X0: 2 / Math.PI, ex: "Диагональ квадрата — диаметр 2r, значит площадь квадрата (2r)²/2 = 2r². Делим на πr²: 2/π ≈ 0,637.", noun: "отношение площадей квадрата и круга" },
+        { q: "Какую часть объёма шара занимает вписанный в него <b>куб</b>?", X0: 2 / (Math.PI * s3), ex: "Диагональ куба a√3 равна диаметру 2r, отсюда a = 2r/√3. a³ / ((4/3)πr³) = 2/(π√3) ≈ 0,368.", noun: "отношение объёмов куба и шара" },
+        { q: "Какую часть площади круга занимает вписанный в него правильный <b>шестиугольник</b>?", X0: 3 * s3 / (2 * Math.PI), ex: "Шестиугольник состоит из 6 равносторонних треугольников со стороной r: S = 6·(√3/4)r². Делим на πr²: 3√3/(2π) ≈ 0,827.", noun: "отношение площадей шестиугольника и круга" },
+        { q: "Какую часть площади круга занимает вписанный в него правильный <b>треугольник</b>?", X0: 3 * s3 / (4 * Math.PI), ex: "Сторона треугольника r√3, площадь (√3/4)·3r² = (3√3/4)r². Делим на πr²: ≈ 0,413.", noun: "отношение площадей треугольника и круга" },
+        { q: "Какую часть площади правильного треугольника занимает вписанный в него <b>круг</b>?", X0: Math.PI / (3 * s3), ex: "Радиус вписанного круга r = a/(2√3). πr² = πa²/12, площадь треугольника (√3/4)a². Отношение π/(3√3) ≈ 0,605.", noun: "отношение площадей круга и треугольника" },
+      ]);
+      return { text: v.q + " Ответ — число от 0 до 1.", X0: v.X0, impossible: x => x <= 0 || x >= 1, explain: v.ex, noun: v.noun };
+    }
+  },
+
+  arrow: {
+    name: "Точка на отрезке",
+    gen() {
+      const p = rnd(0.04, 0.96);
+      return {
+        text: "Где на отрезке от 0 до 1 стоит точка?",
+        draw() {
+          setupCanvas(130);
+          const L = 50, R = 630, y = 70;
+          glow(NEON, 10); ctx.strokeStyle = NEON; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke();
+          [L, R].forEach(xx => { ctx.beginPath(); ctx.moveTo(xx, y - 10); ctx.lineTo(xx, y + 10); ctx.stroke(); });
+          noGlow(); ctx.fillStyle = MUTED; ctx.font = "400 16px Onest, sans-serif"; ctx.textAlign = "center";
+          ctx.fillText("0", L, y + 36); ctx.fillText("1", R, y + 36);
+          glow(WHITE, 16); ctx.fillStyle = WHITE; ctx.beginPath(); ctx.arc(L + p * (R - L), y, 7, 0, 7); ctx.fill(); noGlow();
+        },
+        X0: p, impossible: x => x < 0 || x > 1,
+        explain: "Точный ответ — расстояние от 0 до точки, делённое на длину всего отрезка. Полезный приём: сначала найти глазами середину, потом четверти.",
+        noun: "положение точки на отрезке",
+      };
+    }
+  },
+
+  cosine: {
+    name: "Третья сторона треугольника",
+    gen() {
+      const A = rint(5, 20), B = rint(5, 20), D = pick([30, 45, 60, 75, 90, 100, 110, 120, 135, 150]);
+      const X0 = Math.sqrt(A * A + B * B - 2 * A * B * Math.cos(D * Math.PI / 180));
+      return {
+        text: `Две стороны треугольника — <b>${A}</b> и <b>${B}</b> см, угол между ними <b>${D}°</b>. Какова третья сторона?`,
+        X0, impossible: x => x <= Math.abs(A - B) || x >= A + B,
+        explain: `Теорема косинусов: c² = a² + b² − 2ab·cos γ = ${A}² + ${B}² − 2·${A}·${B}·cos ${D}°. Проверка на здравый смысл: третья сторона всегда больше ${Math.abs(A - B)} и меньше ${A + B}; чем больше угол, тем она длиннее.`,
+        noun: "сторону треугольника по теореме косинусов",
+      };
+    }
+  },
+
+  resist: {
+    name: "Параллельные резисторы",
+    gen() {
+      const R1 = rint(2, 100), R2 = rint(2, 100);
+      return {
+        text: `Резисторы <b>${R1} Ом</b> и <b>${R2} Ом</b> соединены параллельно. Каково общее сопротивление?`,
+        X0: R1 * R2 / (R1 + R2), impossible: x => x <= 0 || x >= Math.min(R1, R2),
+        explain: `1/R = 1/R₁ + 1/R₂, то есть R = R₁R₂/(R₁+R₂) = ${R1}·${R2}/${R1 + R2}. Ток идёт по двум путям сразу, поэтому сопротивление всегда меньше меньшего резистора. Если резисторы равны — ровно половина одного.`,
+        noun: "сопротивление параллельного соединения",
+      };
+    }
+  },
+
+  cubic: {
+    name: "Уравнение без формулы",
+    gen() {
+      const N = rint(4, 300);
+      let x = Math.cbrt(N);
+      for (let i = 0; i < 40; i++) x -= (x * x * x + x - N) / (3 * x * x + 1);
+      return {
+        text: `Решите приближённо уравнение <b>x³ + x = ${N}</b>.`,
+        X0: x, impossible: x => x <= 0,
+        explain: `При больших x слагаемое x почти ничего не значит рядом с x³, поэтому x ≈ ∛${N} ≈ ${fmt(Math.cbrt(N), 2)}, а настоящий корень чуть меньше. Точно его находят численно, например методом Ньютона.`,
+        noun: "корень кубического уравнения",
+      };
+    }
+  },
+
+  average: {
+    name: "Среднее значение",
+    extraTime: 10,
+    gen() {
+      const n = 40;
+      const arr = Array.from({ length: n }, () => Math.round(10 + 990 * Math.pow(Math.random(), 2.2)));
+      const X0 = arr.reduce((s, v) => s + v, 0) / n, mn = Math.min(...arr), mx = Math.max(...arr);
+      return {
+        text: "Каково среднее арифметическое этих 40 чисел?",
+        numbersHtml: arr.join(" "),
+        X0, impossible: x => x < mn || x > mx,
+        explain: `Среднее — сумма всех чисел, делённая на 40. Ловушка: середина между наименьшим (${mn}) и наибольшим (${mx}) — это ${(mn + mx) / 2}, но маленьких чисел здесь гораздо больше, поэтому среднее заметно ниже.`,
+        noun: "среднее арифметическое",
+      };
+    }
+  },
+
+  mass: {
+    name: "Центр масс",
+    click: true,
+    gen() {
+      const k = rint(3, 10), W = 680, H = 360, pts = [];
+      for (let i = 0; i < k; i++) pts.push([rnd(60, W - 60), rnd(40, H - 40)]);
+      const cx = pts.reduce((s, p) => s + p[0], 0) / k, cy = pts.reduce((s, p) => s + p[1], 0) / k;
+      return {
+        text: `Нажмите туда, где находится <b>центр масс</b> этих ${k} одинаковых точек.`,
+        draw(mark) {
+          setupCanvas(H);
+          glow(WHITE, 12); ctx.fillStyle = WHITE;
+          pts.forEach(p => { ctx.beginPath(); ctx.arc(p[0], p[1], 5, 0, 7); ctx.fill(); });
+          noGlow();
+          if (mark) {
+            glow(NEON, 14); ctx.strokeStyle = NEON; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(mark[0] - 9, mark[1]); ctx.lineTo(mark[0] + 9, mark[1]);
+            ctx.moveTo(mark[0], mark[1] - 9); ctx.lineTo(mark[0], mark[1] + 9); ctx.stroke(); noGlow();
+          }
+        },
+        drawAnswer(mark) {
+          this.draw(mark);
+          ctx.strokeStyle = "#a7f3d0"; ctx.lineWidth = 1.5; glow("#a7f3d0", 10);
+          ctx.beginPath(); ctx.arc(cx, cy, 8, 0, 7); ctx.stroke();
+          ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.arc(cx, cy, 0.05 * W, 0, 7); ctx.stroke(); ctx.setLineDash([]); noGlow();
+        },
+        X0: [cx, cy],
+        explain: "Центр масс одинаковых точек — среднее их координат: x̄ = (x₁+…+xₙ)/n, ȳ = (y₁+…+yₙ)/n. Зелёный кружок — точный ответ, пунктир — зона «отлично» (5% ширины поля), голубой крестик — ваш ответ.",
+        noun: "центр масс системы точек",
+      };
+    }
+  },
+};
+
+/* ---------- состояние и история (сохраняется в браузере) ---------- */
+let cur = null, curKey = null, timerId = null, tStart = 0, tLimit = 20, clickMark = null, answered = false;
+const STORE = "glazomer-history-v1";
+let log = [];
+try { log = JSON.parse(localStorage.getItem(STORE) || "[]"); } catch (e) { log = []; }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(log)); } catch (e) {} }
+
+Object.entries(TASKS).forEach(([k, t]) => {
+  const o = document.createElement("option"); o.value = k; o.textContent = t.name; $("kindSel").appendChild(o);
+});
+
+function newTask() {
+  const sel = $("kindSel").value;
+  curKey = sel === "all" ? pick(Object.keys(TASKS)) : sel;
+  const T = TASKS[curKey];
+  cur = T.gen();
+  tLimit = +$("timeSel").value + (T.extraTime || 0);
+  answered = false; clickMark = null;
+
+  $("kind").hidden = false; $("kind").textContent = T.name;
+  $("task").innerHTML = cur.text + (cur.numbersHtml ? `<div class="numbers">${cur.numbersHtml}</div>` : "");
+  cv.hidden = true; cv.classList.toggle("clickable", !!T.click);
+  if (cur.draw) cur.draw();
+
+  $("answerZone").hidden = false; $("result").hidden = true;
+  $("answerRow").hidden = !!T.click; $("clickSend").hidden = !T.click;
+  $("clickSend").disabled = false;
+  $("hint").textContent = T.click ? "Нажмите на поле. Точку можно переставить, пока идёт время." : "Можно дробью (3/7) или десятичным числом (0,43). Enter — ответить.";
+  $("ans").value = ""; $("ans").disabled = false; $("sendBtn").disabled = false;
+  if (!T.click) $("ans").focus();
+  $("startBtn").textContent = "Новая задача";
+  startTimer();
+}
+
+function startTimer() {
+  cancelAnimationFrame(timerId);
+  tStart = performance.now();
+  const tick = now => {
+    const left = Math.max(0, tLimit - (now - tStart) / 1000);
+    $("bar").style.transform = `scaleX(${left / tLimit})`;
+    $("timer").classList.toggle("low", left < 5);
+    $("tl").textContent = `${Math.ceil(left)} с`;
+    if (left <= 0) { submit(true); return; }
+    timerId = requestAnimationFrame(tick);
+  };
+  timerId = requestAnimationFrame(tick);
+}
+
+cv.addEventListener("click", e => {
+  if (!cur || answered || !TASKS[curKey].click) return;
+  const r = cv.getBoundingClientRect();
+  clickMark = [(e.clientX - r.left) * 680 / r.width, (e.clientY - r.top) * canvasH / r.height];
+  cur.draw(clickMark);
+});
+
+function submit(timeUp = false) {
+  if (!cur || answered) return;
+  answered = true;
+  cancelAnimationFrame(timerId);
+  const T = TASKS[curKey];
+  $("ans").disabled = true; $("sendBtn").disabled = true; $("clickSend").disabled = true;
+  $("tl").textContent = timeUp ? "Время вышло" : `Ответ за ${((performance.now() - tStart) / 1000).toFixed(1)} с`;
+
+  let X0s, Xs, absS, relErr, gk, gt;
+  if (T.click) {
+    const [cx, cy] = cur.X0;
+    relErr = clickMark ? Math.hypot(clickMark[0] - cx, clickMark[1] - cy) / 680 : Infinity;
+    [gk, gt] = !clickMark ? ["bad", "Нет ответа"] :
+      relErr < 0.05 ? ["excellent", "Отлично"] : relErr < 0.10 ? ["good", "Хорошо"] : relErr < 0.20 ? ["sat", "Удовлетворительно"] : ["bad", "Плохо"];
+    cur.drawAnswer(clickMark);
+    X0s = "зелёный круг"; Xs = clickMark ? "крестик" : "—";
+    absS = clickMark ? `${(relErr * 100).toFixed(1)}% поля` : "—";
+  } else {
+    const X = parseAnswer($("ans").value), X0 = cur.X0;
+    relErr = Number.isFinite(X) && X > 0 ? Math.abs(Math.log(X / X0)) : Infinity;
+    if (!Number.isFinite(X)) [gk, gt] = ["bad", "Нет ответа"];
+    else if (cur.impossible(X)) [gk, gt] = ["bad", "Невозможный ответ"];
+    else [gk, gt] = gradeOf(relErr);
+    const d = X0 < 1 ? 3 : X0 < 100 ? 2 : 1;
+    X0s = fmt(X0, d); Xs = Number.isFinite(X) ? fmt(X, d + 1) : "—";
+    absS = Number.isFinite(X) ? fmt(Math.abs(X - X0), d + 1) : "—";
+  }
+  $("rX0").textContent = X0s; $("rX").textContent = Xs; $("rAbs").textContent = absS;
+  $("rRel").textContent = Number.isFinite(relErr) ? `${(relErr * 100).toFixed(1)}%` : "—";
+  $("grade").textContent = gt; $("grade").className = "grade " + gk;
+  $("congrats").textContent = gk === "excellent" ? `Поздравляем! Вы почти точно нашли ${cur.noun}.` : "";
+  $("explain").textContent = cur.explain;
+  $("result").hidden = false;
+  $("nextBtn").focus({ preventScroll: true });
+  $("result").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+
+  log.push({ id: Date.now() + Math.random(), name: T.name, X0: X0s, X: Xs, abs: absS, grade: gt, key: gk, rel: Number.isFinite(relErr) ? relErr : null, t: new Date().toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) });
+  save(); render();
+}
+
+function render() {
+  const rows = $("rows");
+  rows.innerHTML = "";
+  [...log].reverse().forEach(r => {
+    const li = document.createElement("li");
+    li.innerHTML = `<div class="nm">${r.name}<small>X₀ ${r.X0} · ваш ${r.X} · ${r.t}</small></div>
+      <div class="er">${r.rel != null ? (r.rel * 100).toFixed(1) + "%" : "—"}</div>
+      <div class="gr ${r.key}">${r.grade}</div>`;
+    const b = document.createElement("button");
+    b.className = "del"; b.textContent = "×"; b.title = "Удалить"; b.setAttribute("aria-label", `Удалить результат: ${r.name}`);
+    b.onclick = () => { log = log.filter(x => x.id !== r.id); save(); render(); };
+    li.appendChild(b); rows.appendChild(li);
+  });
+  $("clearBtn").hidden = !log.length;
+  const ok = log.filter(r => r.rel != null);
+  const exc = log.filter(r => r.key === "excellent").length;
+  const avg = ok.length ? ok.reduce((s, r) => s + r.rel, 0) / ok.length : null;
+  $("summary").textContent = log.length
+    ? `Задач: ${log.length} · «Отлично»: ${exc} · Средняя ошибка: ${avg != null ? (avg * 100).toFixed(1) + "%" : "—"}`
+    : "Пока нет ответов.";
+}
+
+$("startBtn").onclick = newTask;
+$("nextBtn").onclick = newTask;
+$("sendBtn").onclick = () => submit();
+$("clickSend").onclick = () => submit();
+$("ans").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && answered && document.activeElement === document.body) { e.preventDefault(); newTask(); }
+});
+$("clearBtn").onclick = () => { if (confirm("Удалить всю историю?")) { log = []; save(); render(); } };
+$("aboutBtn").onclick = () => {
+  const a = $("about"), open = a.hidden;
+  a.hidden = !open; $("aboutBtn").setAttribute("aria-expanded", open);
+  $("aboutBtn").textContent = open ? "Скрыть" : "Как это работает";
+};
+render();
+</script>
+</body>
+</html>
